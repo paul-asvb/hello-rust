@@ -2,3 +2,9 @@
 
 https://rustwasm.github.io
 https://doc.rust-lang.org/book/index.html
+
+## Development
+
+```bash
+make dev
+```
