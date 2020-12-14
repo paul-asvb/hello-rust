@@ -1,3 +1,5 @@
+//use crate::io::sys::process::process_common::File;
+//use crate::io::sys::ext::process::process::Path;
 use rand::Rng;
 use std::io;
 
@@ -11,12 +13,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     println!("{:#?}", resp);
 
-    let mut client = reqwest::Client::new();
+   /* let mut client = reqwest::Client::new();
     let mut image_file = client
         .get("https://images.pexels.com/photos/2124773/pexels-photo-2124773.jpeg")
-        .send()
-        .unwrap();
+        .send();
 
+*/
+/*
     let path = Path::new("img_test.jpeg");
     let display = path.display();
     let mut file = match File::create(&path) {
@@ -27,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
         Ok(_) => println!("successfully wrote to {}", display),
     }
-
+*/
     Ok(())
 }
 
