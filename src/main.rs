@@ -1,7 +1,8 @@
 //use crate::io::sys::process::process_common::File;
 //use crate::io::sys::ext::process::process::Path;
 use rand::Rng;
-use std::io;
+use std::fs;
+use std::path::Path;
 
 use std::collections::HashMap;
 
@@ -13,24 +14,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     println!("{:#?}", resp);
 
-   /* let mut client = reqwest::Client::new();
+    let mut client = reqwest::Client::new();
     let mut image_file = client
         .get("https://images.pexels.com/photos/2124773/pexels-photo-2124773.jpeg")
-        .send();
+        .send()
+        .await;
 
-*/
-/*
     let path = Path::new("img_test.jpeg");
     let display = path.display();
-    let mut file = match File::create(&path) {
-        Err(why) => panic!("couldn't create {}: {}", display, why.description()),
+    let mut file = match fs::File::create(&path) {
+        Err(why) => panic!("couldn't create {}", display),
         Ok(file) => file,
     };
-    match std::io::copy(&mut image_file, &mut file) {
-        Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
+    match fs::copy(&mut image_file.as_bytes(), "./asdf") {
+        Err(why) => panic!("couldn't write to {}", display),
         Ok(_) => println!("successfully wrote to {}", display),
     }
-*/
     Ok(())
 }
 
