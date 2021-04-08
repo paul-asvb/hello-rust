@@ -1,59 +1,36 @@
-//use crate::io::sys::process::process_common::File;
-//use crate::io::sys::ext::process::process::Path;
-use rand::Rng;
-use std::fs;
-use std::path::Path;
+extern crate gitlab_api as gitlab;
 
-use std::collections::HashMap;
+fn main() {
+    let gl = gitlab::GitLab::new(&"gitlab.com", &"GITLAB_TOKEN_XXXXXXX").unwrap();
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let resp = reqwest::get("https://httpbin.org/ip")
-        .await?
-        .json::<HashMap<String, String>>()
-        .await?;
-    println!("{:#?}", resp);
+    // Get GitLab's version.
+    let gitlab_version = gl.version().unwrap();
+    println!("gitlab_version: {:?}", gitlab_version);
 
-    let mut client = reqwest::Client::new();
-    let mut image_file = client
-        .get("https://images.pexels.com/photos/2124773/pexels-photo-2124773.jpeg")
-        .send()
-        .await;
 
-    let path = Path::new("img_test.jpeg");
-    let display = path.display();
-    let mut file = match fs::File::create(&path) {
-        Err(why) => panic!("couldn't create {}", display),
-        Ok(file) => file,
-    };
-    match fs::copy(&mut image_file.as_ref(), "./asdf") {
-        Err(why) => panic!("couldn't write to {}", display),
-        Ok(_) => println!("successfully wrote to {}", display),
-    }
-    Ok(())
-}
+    // Low level methods
 
-fn test() {
-    let secret_number = rand::thread_rng().gen_range(1, 101);
+    // Get projects, owned by authenticated user and which are archived.
+    let projects = gl.projects().owned().archived(true).list().unwrap();
+    println!("projects: {:?}", projects);
 
-    let mut guess = String::new();
-    println!("Guess the number!");
+    // Get groups owned by authenticated user.
+    let owned_groups = gl.groups().owned().list().unwrap();
+    println!("owned_groups: {:?}", owned_groups);
 
-    println!("Please input your guess.");
+    // Get closed issues.
+    let closed_issues = gl.issues().state(gitlab::issues::State::Closed).list().unwrap();
+    println!("closed_issues: {:?}", closed_issues);
 
-    let mut guess = String::new();
 
-    io::stdin()
-        .read_line(&mut guess)
-        .expect("Failed to read line");
+    // Higher level methods
 
-    if guess != "" {
-        hello()
-    }
+    // Get a specific project
+    let project = gl.get_project("nbigaouette1", "gitlab-api-rs").chain_err(|| "cannot get project")?;
 
-    println!("You guessed: {}", guess);
-}
+    // Get a specific issue
+    let issue = gl.get_issue("nbigaouette1", "gitlab-api-rs", 1).chain_err(|| "cannot get issue")?;
 
-fn hello() {
-    println!("Hello, world!");
+    // Get a specific merge request
+    let merge_request = gl.get_merge_request("nbigaouette1", "gitlab-api-rs", 1).chain_err(|| "cannot get merge_request")?;
 }
