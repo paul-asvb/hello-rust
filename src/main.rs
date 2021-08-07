@@ -1,36 +1,56 @@
-extern crate gitlab_api as gitlab;
+use actix_web::Result;
+use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
 
-fn main() {
-    let gl = gitlab::GitLab::new(&"gitlab.com", &"GITLAB_TOKEN_XXXXXXX").unwrap();
+struct Query;
 
-    // Get GitLab's version.
-    let gitlab_version = gl.version().unwrap();
-    println!("gitlab_version: {:?}", gitlab_version);
-
-
-    // Low level methods
-
-    // Get projects, owned by authenticated user and which are archived.
-    let projects = gl.projects().owned().archived(true).list().unwrap();
-    println!("projects: {:?}", projects);
-
-    // Get groups owned by authenticated user.
-    let owned_groups = gl.groups().owned().list().unwrap();
-    println!("owned_groups: {:?}", owned_groups);
-
-    // Get closed issues.
-    let closed_issues = gl.issues().state(gitlab::issues::State::Closed).list().unwrap();
-    println!("closed_issues: {:?}", closed_issues);
-
-
-    // Higher level methods
-
-    // Get a specific project
-    let project = gl.get_project("nbigaouette1", "gitlab-api-rs").chain_err(|| "cannot get project")?;
-
-    // Get a specific issue
-    let issue = gl.get_issue("nbigaouette1", "gitlab-api-rs", 1).chain_err(|| "cannot get issue")?;
-
-    // Get a specific merge request
-    let merge_request = gl.get_merge_request("nbigaouette1", "gitlab-api-rs", 1).chain_err(|| "cannot get merge_request")?;
+#[Object]
+impl Query {
+    /// Returns the sum of a and b
+    async fn add(&self, a: i32, b: i32) -> i32 {
+        a + b
+    }
 }
+#[async_std::main]
+
+async fn main() {
+    let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
+    let res = schema.execute("{ add(a: 10, b: 20) }").await;
+    let json = serde_json::to_string(&res);
+    match json {
+        Ok(s) => println!("Fetched results: {:#?}", s),
+        Err(e) => println!("Got an error: {:?}", e),
+    };
+    //     println!("{}", json);
+    // println!("Hello, world!");
+}
+
+// async fn index(schema: web::Data<StarWarsSchema>, req: Request) -> Response {
+//     schema.execute(req.into_inner()).await.into()
+// }
+
+// async fn index_playground() -> Result<HttpResponse> {
+//     Ok(HttpResponse::Ok()
+//         .content_type("text/html; charset=utf-8")
+//         .body(playground_source(
+//             GraphQLPlaygroundConfig::new("/").subscription_endpoint("/"),
+//         )))
+// }
+
+// #[actix_rt::main]
+// async fn main() -> std::io::Result<()> {
+//     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+//         .data(StarWars::new())
+//         .finish();
+
+//     println!("Playground: http://localhost:8000");
+
+//     HttpServer::new(move || {
+//         App::new()
+//             .data(schema.clone())
+//             .service(web::resource("/").guard(guard::Post()).to(index))
+//             .service(web::resource("/").guard(guard::Get()).to(index_playground))
+//     })
+//     .bind("127.0.0.1:8000")?
+//     .run()
+//     .await
+// }
