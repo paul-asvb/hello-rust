@@ -1,7 +1,18 @@
-use actix_web::Result;
-use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+//use actix_web::Result;
+use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema, SimpleObject};
 
 struct Query;
+
+#[derive(SimpleObject)]
+struct MyObject {
+    /// Value a
+    a: i32,
+
+    /// Value b
+    b: i32,
+    //#[graphql(skip)]
+    //c: i32,
+}
 
 #[Object]
 impl Query {
@@ -9,12 +20,17 @@ impl Query {
     async fn add(&self, a: i32, b: i32) -> i32 {
         a + b
     }
+
+    async fn obj(&self, a: i32, b: i32) -> MyObject {
+        MyObject { a: a, b: b }
+    }
 }
+
 #[async_std::main]
 
 async fn main() {
     let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
-    let res = schema.execute("{ add(a: 10, b: 20) }").await;
+    let res = schema.execute("{ obj(a: 10, b: 20) }").await;
     let json = serde_json::to_string(&res);
     match json {
         Ok(s) => println!("Fetched results: {:#?}", s),
