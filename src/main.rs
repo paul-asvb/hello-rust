@@ -1,6 +1,24 @@
 //use actix_web::Result;
+use actix_web::{web, App, HttpRequest, HttpServer, Responder};
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema, SimpleObject};
 
+async fn greet(req: HttpRequest) -> impl Responder {
+    let name = req.match_info().get("name").unwrap_or("World");
+    format!("Hello {}!", &name)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    test().await;
+    HttpServer::new(|| {
+        App::new()
+            .route("/", web::get().to(greet))
+            .route("/{name}", web::get().to(greet))
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
+}
 struct Query;
 
 #[derive(SimpleObject)]
@@ -26,9 +44,7 @@ impl Query {
     }
 }
 
-#[async_std::main]
-
-async fn main() {
+async fn test() {
     let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
     let res = schema.execute("{ obj(a: 10, b: 20) }").await;
     let json = serde_json::to_string(&res);
