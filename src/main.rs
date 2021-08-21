@@ -1,3 +1,5 @@
+use std::net::TcpListener;
+
 //use actix_web::Result;
 use actix_web::{web, App, HttpRequest, HttpServer, Responder};
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema, SimpleObject};
@@ -7,17 +9,30 @@ async fn greet(req: HttpRequest) -> impl Responder {
     format!("Hello {}!", &name)
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    test().await;
-    HttpServer::new(|| {
+async fn start_server() -> Result<actix_web::dev::Server, Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind("0.0.0.0:8080").expect("Failed to bind port");
+
+    let server = HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(greet))
             .route("/{name}", web::get().to(greet))
     })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    .listen(listener)?
+    .run();
+    Ok(server)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    run_schema().await;
+    let server = start_server().await;
+
+    match server {
+        Ok(_s) => println!("server running"),
+        Err(error) => panic!("server could not start error: {:?}", error),
+    };
+
+    Ok(())
 }
 struct Query;
 
@@ -44,7 +59,15 @@ impl Query {
     }
 }
 
-async fn test() {
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+
+async fn run_schema() {
     let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
     let res = schema.execute("{ obj(a: 10, b: 20) }").await;
     let json = serde_json::to_string(&res);
