@@ -1,7 +1,9 @@
+mod test;
+
 use std::net::TcpListener;
 
 //use actix_web::Result;
-use actix_web::{web, App, HttpRequest, HttpServer, Responder};
+use actix_web::{dev::Body, web, App, HttpRequest, HttpServer, Responder};
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema, SimpleObject};
 
 async fn greet(req: HttpRequest) -> impl Responder {
@@ -9,16 +11,16 @@ async fn greet(req: HttpRequest) -> impl Responder {
     format!("Hello {}!", &name)
 }
 
+fn create_actix_app() -> Result<App, Box<dyn std::error::Error>> {
+    Ok(App::new()
+        .route("/", web::get().to(greet))
+        .route("/{name}", web::get().to(greet)))
+}
+
 async fn start_server() -> Result<actix_web::dev::Server, Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("0.0.0.0:8080").expect("Failed to bind port");
 
-    let server = HttpServer::new(|| {
-        App::new()
-            .route("/", web::get().to(greet))
-            .route("/{name}", web::get().to(greet))
-    })
-    .listen(listener)?
-    .run();
+    let server = HttpServer::new(|| {}).listen(listener)?.run();
     Ok(server)
 }
 
