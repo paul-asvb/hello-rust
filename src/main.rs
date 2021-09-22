@@ -1,54 +1,31 @@
-use std::fs;
-use std::path::Path;
-
-use std::collections::HashMap;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let resp = reqwest::get("https://httpbin.org/ip")
-        .await?
-        .json::<HashMap<String, String>>()
-        .await?;
-    println!("{:#?}", resp);
-
-    let client = reqwest::Client::new();
-    let image_file = client
-        .get("https://images.pexels.com/photos/2124773/pexels-photo-2124773.jpeg")
-        .send()
-        .await;
-
-    let path = Path::new("img_test.jpeg");
-    let display = path.display();
-
-    let b = image_file.unwrap().bytes().await.unwrap();
-    match fs::write("./test.jpeg", &b) {
-        Err(_) => panic!("couldn't write to {}", display),
-        Ok(_) => println!("successfully wrote to {}", display),
-    }
-    Ok(())
+#[derive(Debug, PartialEq, Eq)]
+struct MyStruct {
+    my_string: String,
+    my_bool: bool,
+    my_number: u64,
 }
 
-// use axum::{http::StatusCode, prelude::*, response::IntoResponse};
-// use serde::{Deserialize, Serialize};
-// use std::net::SocketAddr;
+fn main() {
+    println!("main")
+}
 
-// #[tokio::main]
-// async fn main() {
-//     // build our application with a route
-//     let app =
-//         // `GET /` goes to `root`
-//         route("/", get(root));
-
-//     // run our app with hyper
-//     // `axum::Server` is a re-export of `hyper::Server`
-//     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-//     axum::Server::bind(&addr)
-//         .serve(app.into_make_service())
-//         .await
-//         .unwrap();
-// }
-
-// // basic handler that responds with a static string
-// async fn root() -> &'static str {
-//     "Hello, World!"
-// }
+#[test]
+fn test_struct() {
+    let test1 = MyStruct {
+        my_string: "string1".to_string(),
+        my_bool: false,
+        my_number: 1,
+    };
+    let test11 = MyStruct {
+        my_string: "string1".to_string(),
+        my_bool: false,
+        my_number: 1,
+    };
+    let test2 = MyStruct {
+        my_string: "string1".to_string(),
+        my_bool: false,
+        my_number: 2,
+    };
+    assert_eq!(test1, test2);
+    assert_eq!(test1, test11);
+}
